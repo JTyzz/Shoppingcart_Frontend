@@ -14,12 +14,15 @@ import android.widget.TextView;
 
 import com.earthdefensesystem.shoppingcart_frontend.model.Product;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.earthdefensesystem.shoppingcart_frontend.ShoppingDAO.PRODUCT_URL;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -42,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
 
         parentLayout = findViewById(R.id.parent_layout);
         context = this;
+
+        final ArrayList<Product> data = new ArrayList<>();
 
         listButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -66,20 +71,29 @@ public class MainActivity extends AppCompatActivity {
 
                             headerProperties.clear();
                             headerProperties.put("Authorization", "Bearer " + token);
+                                try {
+                                    String result = NetworkAdapter.httpRequest(PRODUCT_URL, NetworkAdapter.GET, null, headerProperties);
+                                    JSONArray dataJsonArray = new JSONArray(result);
 
-                            final ArrayList<Product> products = ShoppingDAO.getProductList();
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    for(int i = 0; i < products.size(); i++) {
-                                        TextView textView = new TextView(context);
-                                        final Product getProducts = products.get(i);
-                                        textView.setText(getProducts.getDescription()+ " " + getProducts.getProductname());
-                                        textView.setTextSize(20);
-                                        parentLayout.addView(textView);
+                                    for (int i = 0; i < dataJsonArray.length(); ++i) {
+                                        Product product = new Product(dataJsonArray.getJSONObject(i));
+                                        data.add(product);
                                     }
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            for(int i = 0; i < data.size(); i++) {
+                                                TextView textView = new TextView(context);
+                                                final Product getProducts = data.get(i);
+                                                textView.setText(getProducts.getDescription()+ " " + getProducts.getProductname());
+                                                textView.setTextSize(20);
+                                                parentLayout.addView(textView);
+                                            }
+                                        }
+                                    });
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
                                 }
-                            });
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
