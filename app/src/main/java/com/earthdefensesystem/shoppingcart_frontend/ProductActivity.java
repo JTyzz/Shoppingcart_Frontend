@@ -73,13 +73,9 @@ public class ProductActivity extends AppCompatActivity {
                     public void run() {
                         JSONObject productdata = new JSONObject();
                         try {
-                            if (productName.getText().toString() != "") {
-                                productdata.put("productname", productName.getText().toString());
-                            }
+                            productdata.put("productname", productName.getText().toString());
                             productdata.put("productid", productId.getText().toString());
-                            if (productDescription.getText().toString() != "") {
-                                productdata.put("description", productDescription.getText().toString());
-                            }
+                            productdata.put("description", productDescription.getText().toString());
                             productdata.put("price", productPrice.getText().toString());
                         } catch (JSONException e) {
                             e.printStackTrace();

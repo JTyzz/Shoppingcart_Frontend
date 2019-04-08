@@ -4,14 +4,22 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.earthdefensesystem.shoppingcart_frontend.model.Product;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -20,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     LinearLayout parentLayout;
     Context context;
     Button listButton, productEntryButton;
+    EditText usernameText, passwordText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
 
         listButton = findViewById(R.id.loadlist);
         productEntryButton = findViewById(R.id.product_entry_button);
+        usernameText = findViewById(R.id.username_text);
+        passwordText= findViewById(R.id.password_text);
 
         parentLayout = findViewById(R.id.parent_layout);
         context = this;
@@ -38,19 +49,40 @@ public class MainActivity extends AppCompatActivity {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        final ArrayList<Product> products = ShoppingDAO.getProductList();
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                for(int i = 0; i < products.size(); i++) {
-                                    TextView textView = new TextView(context);
-                                    final Product getProducts = products.get(i);
-                                    textView.setText(getProducts.getDescription()+ " " + getProducts.getProductname());
-                                    textView.setTextSize(20);
-                                    parentLayout.addView(textView);
+                        String auth = Base64.encodeToString("lambda-client:lambda-secret".getBytes(), Base64.DEFAULT);
+
+                        Map<String, String> headerProperties = new HashMap<>();
+                        headerProperties.put("Authorization", "Basic " + auth);
+
+                        String tokenRequest = NetworkAdapter.httpRequest(
+                                "http://10.0.2.2:8080/oauth/token?grant_type=password&username="
+                                        +usernameText.getText().toString()+"&password="
+                                        +passwordText.getText().toString()+"&scope=",
+                                "POST", null, headerProperties);
+
+                        Log.i(TAG, tokenRequest);
+                        try {
+                            String token = new JSONObject(tokenRequest).getString("access_token");
+
+                            headerProperties.clear();
+                            headerProperties.put("Authorization", "Bearer " + token);
+
+                            final ArrayList<Product> products = ShoppingDAO.getProductList();
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    for(int i = 0; i < products.size(); i++) {
+                                        TextView textView = new TextView(context);
+                                        final Product getProducts = products.get(i);
+                                        textView.setText(getProducts.getDescription()+ " " + getProducts.getProductname());
+                                        textView.setTextSize(20);
+                                        parentLayout.addView(textView);
+                                    }
                                 }
-                            }
-                        });
+                            });
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }).start();
             }
