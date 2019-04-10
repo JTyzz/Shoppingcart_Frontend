@@ -18,6 +18,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -59,11 +60,17 @@ public class MainActivity extends AppCompatActivity {
                         Map<String, String> headerProperties = new HashMap<>();
                         headerProperties.put("Authorization", "Basic " + auth);
 
-                        String tokenRequest = NetworkAdapter.httpRequest(
-                                "http://10.0.2.2:8080/oauth/token?grant_type=password&username="
-                                        +usernameText.getText().toString()+"&password="
-                                        +passwordText.getText().toString()+"&scope=",
-                                "POST", null, headerProperties);
+                        String tokenUrl= "http://10.0.2.2:1932/oauth/token?grant_type=password&username="
+                                +usernameText.getText().toString()+"&password="
+                                +passwordText.getText().toString()+"&scope=";
+
+                        String tokenRequest = null;
+                        try {
+                            tokenRequest = NetworkAdapter.httpRequest(
+                                    tokenUrl, "POST", null, headerProperties);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
 
                         Log.i(TAG, tokenRequest);
                         try {
@@ -72,7 +79,12 @@ public class MainActivity extends AppCompatActivity {
                             headerProperties.clear();
                             headerProperties.put("Authorization", "Bearer " + token);
                                 try {
-                                    String result = NetworkAdapter.httpRequest(PRODUCT_URL, NetworkAdapter.GET, null, headerProperties);
+                                    String result = null;
+                                    try {
+                                        result = NetworkAdapter.httpRequest(PRODUCT_URL, "GET", null, headerProperties);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
                                     JSONArray dataJsonArray = new JSONArray(result);
 
                                     for (int i = 0; i < dataJsonArray.length(); ++i) {

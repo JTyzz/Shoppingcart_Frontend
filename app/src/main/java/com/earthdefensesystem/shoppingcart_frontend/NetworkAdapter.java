@@ -20,75 +20,68 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.net.ssl.HttpsURLConnection;
 
-public final class NetworkAdapter {
+public class NetworkAdapter {
 
-    private static final int    TIMEOUT = 3000;
-    public static final String GET = "GET";
-    public static final String POST = "POST";
-    public static final String PUT = "PUT";
-    public static final String DELETE = "DELETE";
+    final static int TIMEOUT = 5000;
 
 
-    public static String httpRequest(final String urlString, final String requestType, final JSONObject content, final Map<String, String> headerProperties) {
-        String            result     = "";
-        InputStream       stream     = null;
+    public static String httpRequest(String urlString, String requestType, JSONObject object, Map<String, String> headerProps) throws IOException {
+        String result = "";
+        InputStream stream = null;
         HttpURLConnection connection = null;
+        ;
+
         try {
-            URL url = new URL(urlString);
-            connection = (HttpURLConnection) url.openConnection();
-            // Timeout for reading InputStream arbitrarily set to 3000ms.
+            URL apiUrl = new URL(urlString);
+            connection = (HttpURLConnection) apiUrl.openConnection();
             connection.setReadTimeout(TIMEOUT);
-            // Timeout for connection.connect() arbitrarily set to 3000ms.
             connection.setConnectTimeout(TIMEOUT);
-            connection.setRequestProperty("Content-Type", "application/json");
-            connection.setRequestProperty("Accept", "application/json");
-            // For this use case, set HTTP method to GET.
             connection.setRequestMethod(requestType);
 
-            if (headerProperties != null) {
-                for (Map.Entry<String, String> entry : headerProperties.entrySet()) {
+            if (headerProps != null) {
+                for (Map.Entry<String, String> entry : headerProps.entrySet()) {
                     connection.setRequestProperty(entry.getKey(), entry.getValue());
                 }
             }
-
-            // Already true by default but setting just in case; needs to be true since this request
-            // is carrying an input (response) body.
             connection.setDoInput(true);
 
-            if (requestType.equals(POST)|| requestType.equals(PUT) && content != null) {
+            if ((requestType.equals("POST") || requestType.equals("PUT")) && object != null) {
+                connection.setRequestProperty("Content-Type","application/json");
                 OutputStream outputStream = connection.getOutputStream();
-                outputStream.write(content.toString().getBytes());
+                outputStream.write(object.toString().getBytes());
                 outputStream.close();
-            } else if (requestType.equals(GET) || requestType.equals(DELETE)) {
-                // Open communications link (network traffic occurs here).
+            } else {
                 connection.connect();
             }
-            //            publishProgress(DownloadCallback.Progress.CONNECT_SUCCESS);
+
             int responseCode = connection.getResponseCode();
-            if (responseCode != HttpsURLConnection.HTTP_OK) {
+            if (responseCode != HttpURLConnection.HTTP_OK) {
                 result = Integer.toString(responseCode);
                 throw new IOException("HTTP error code: " + responseCode);
             }
-            // Retrieve the response body as an InputStream.
+
             stream = connection.getInputStream();
-            // publishProgress(DownloadCallback.Progress.GET_INPUT_STREAM_SUCCESS, 0);
             if (stream != null) {
-                // Converts Stream to String with max length of 500.
                 BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-                StringBuilder  sb     = new StringBuilder();
-
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    sb.append(line).append('\n');
+                StringBuilder builder = new StringBuilder();
+                String line = reader.readLine();
+                while (line != null) {
+                    builder.append(line); //.append('\n')
+                    line = reader.readLine();
                 }
-                result = sb.toString();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
+                result = builder.toString();
 
-            // Close Stream and disconnect HTTPS connection.
+            }
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+
+        } finally {
             if (stream != null) {
+
                 try {
                     stream.close();
                 } catch (IOException e) {
@@ -98,8 +91,9 @@ public final class NetworkAdapter {
             if (connection != null) {
                 connection.disconnect();
             }
-
         }
+
         return result;
     }
+
 }

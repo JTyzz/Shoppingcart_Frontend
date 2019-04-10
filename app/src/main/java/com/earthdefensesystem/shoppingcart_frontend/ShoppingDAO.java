@@ -8,6 +8,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
@@ -25,7 +26,12 @@ public class ShoppingDAO {
         ArrayList<Product> data = new ArrayList<>();
 
         try {
-            String result = NetworkAdapter.httpRequest(PRODUCT_URL, NetworkAdapter.GET, null, null);
+            String result = null;
+            try {
+                result = NetworkAdapter.httpRequest(PRODUCT_URL, "GET", null, null);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 //            JSONObject dataObject = new JSONObject(result);
             JSONArray dataJsonArray = new JSONArray(result);
 

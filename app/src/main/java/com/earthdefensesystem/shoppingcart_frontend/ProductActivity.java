@@ -15,6 +15,7 @@ import com.earthdefensesystem.shoppingcart_frontend.model.Product;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class ProductActivity extends AppCompatActivity {
@@ -56,9 +57,14 @@ public class ProductActivity extends AppCompatActivity {
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                        String tokenRequest = NetworkAdapter.httpRequest(
-                                "http://10.0.2.2:1932/product",
-                                "POST", productdata, null);
+                        String tokenRequest = null;
+                        try {
+                            tokenRequest = NetworkAdapter.httpRequest(
+                                    "http://10.0.2.2:1932/product",
+                                    "POST", productdata, null);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
 
                         Log.i(TAG, tokenRequest);
                     }
@@ -80,9 +86,14 @@ public class ProductActivity extends AppCompatActivity {
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                        String tokenRequest = NetworkAdapter.httpRequest(
-                                "http://10.0.2.2:1932/product/" + productId.getText().toString(),
-                                "PUT", productdata, null);
+                        String tokenRequest = null;
+                        try {
+                            tokenRequest = NetworkAdapter.httpRequest(
+                                    "http://10.0.2.2:1932/product/" + productId.getText().toString(),
+                                    "PUT", productdata, null);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
 
                         Log.i(TAG, tokenRequest);
                     }
@@ -96,9 +107,14 @@ public class ProductActivity extends AppCompatActivity {
                     @Override
                     public void run() {
 
-                        String tokenRequest = NetworkAdapter.httpRequest(
-                                "http://10.0.2.2:1932/product/" + productId.getText().toString(),
-                                "DELETE", null, null);
+                        String tokenRequest = null;
+                        try {
+                            tokenRequest = NetworkAdapter.httpRequest(
+                                    "http://10.0.2.2:1932/product/" + productId.getText().toString(),
+                                    "DELETE", null, null);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
 
                         Log.i(TAG, tokenRequest);
                     }
